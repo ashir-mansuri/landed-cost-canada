@@ -1,0 +1,1244 @@
+<!DOCTYPE html>
+<html lang="en-CA">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Landed Cost Canada: compare import costs and suppliers</title>
+<meta name="description" content="Work out the full landed cost of importing goods into Canada and compare suppliers on cost, quality, lead time, risk and CO2.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%231C4A73'/%3E%3Crect x='8' y='9' width='16' height='9' rx='1' fill='%23fff'/%3E%3Crect x='5' y='21' width='22' height='3' fill='%23E1463E'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,300..800&display=swap" rel="stylesheet">
+<style>
+:root{
+  color-scheme: light;
+  --ink:#14283A; --ink-2:#52667A; --ink-3:#71839A;
+  --paper:#EDF1F2; --surface:#FFFFFF; --wash:#F4F7F8;
+  --rule:#D6DEE3; --rule-strong:#B6C3CC;
+  --container:#1C4A73; --container-deep:#163C5E; --on-container:#FFFFFF; --on-container-2:#C7D7E6;
+  --border-red:#E1463E;
+  --focus:#2B7BD8;
+  --tint:#E3ECF5;
+  --s-goods:#257de0; --s-ship:#f47230; --s-duty:#00b894; --s-gst:#f2a600;
+  --radius-s:6px; --radius-m:10px;
+  --font:"Archivo", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;font-family:var(--font);font-size:16px;line-height:1.5;color:var(--ink);background:var(--paper)}
+a{color:var(--container)}
+a:hover{color:var(--ink)}
+:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.wrap{max-width:1280px;margin:0 auto;padding:0 24px}
+@media (max-width:520px){.wrap{padding:0 14px}}
+
+/* Header */
+.top{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:20px 0;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:12px}
+.brand svg{width:34px;height:34px;flex:none}
+.brand-name{margin:0;font-stretch:122%;font-weight:760;font-size:20px;letter-spacing:-.01em;line-height:1.1}
+.brand-sub{display:block;font-size:13px;color:var(--ink-2);font-weight:400;font-stretch:100%;letter-spacing:0;margin-top:2px}
+.actions{display:flex;gap:8px;flex-wrap:wrap}
+.btn{font:inherit;font-size:14px;font-weight:600;padding:9px 14px;border-radius:var(--radius-s);border:1px solid var(--rule-strong);background:var(--surface);color:var(--ink);cursor:pointer;line-height:1.2}
+.btn:hover{border-color:var(--ink-2)}
+.btn:disabled{opacity:.6;cursor:progress}
+.btn.primary{background:var(--ink);border-color:var(--ink);color:#fff}
+.btn.primary:hover{background:#0B1B29}
+.btn.quiet{background:transparent;border-color:transparent;color:var(--ink-2);padding:8px 6px;text-decoration:underline;text-underline-offset:3px}
+.btn.quiet:hover{color:var(--ink)}
+
+/* Hero: the container wall with the cost route */
+.hero{position:relative;color:var(--on-container);background-color:var(--container);
+  background-image:repeating-linear-gradient(90deg,rgba(255,255,255,.05) 0 3px,rgba(255,255,255,0) 3px 26px,rgba(0,0,0,.10) 26px 29px,rgba(0,0,0,0) 29px 52px);
+  border-radius:var(--radius-m);padding:32px 36px 28px}
+@media (max-width:520px){.hero{padding:24px 20px}}
+.hero h1{margin:0;font-stretch:118%;font-weight:760;font-size:clamp(26px,3.3vw,40px);line-height:1.08;letter-spacing:-.015em;max-width:26ch;text-wrap:balance}
+.hero .facts{margin:12px 0 0;color:var(--on-container-2);font-size:15px;max-width:72ch}
+.hero .facts strong{color:#fff;font-weight:600}
+.route{list-style:none;margin:30px 0 4px;padding:0;display:grid;grid-template-columns:repeat(5,minmax(0,1fr))}
+.route li{position:relative;padding-right:14px}
+.route .node{position:absolute;left:0;top:0;width:16px;height:16px;border-radius:50%;background:#fff;box-shadow:0 0 0 3px var(--container)}
+.route li:not(:last-child)::after{content:"";position:absolute;top:7px;left:22px;right:6px;height:2px;background:rgba(255,255,255,.45)}
+.route li.after-border:not(:last-child)::after{background:#fff}
+.route li.border .node{background:var(--border-red)}
+.route li.final .node{width:20px;height:20px;top:-2px;left:-2px}
+.stage-name{display:block;margin-top:28px;font-size:13px;color:var(--on-container-2);font-weight:500;line-height:1.3}
+.stage-value{display:block;margin-top:4px;font-size:20px;font-weight:700;font-stretch:108%;font-variant-numeric:tabular-nums;line-height:1.2}
+.stage-add{display:block;font-size:13px;color:var(--on-container-2);margin-top:2px}
+.stage-note{display:block;font-size:14px;color:#fff;margin-top:2px}
+.route li.final .stage-value{font-size:clamp(30px,3.2vw,42px);font-stretch:118%;line-height:1.02;letter-spacing:-.01em}
+@media (max-width:760px){
+  .route{grid-template-columns:1fr}
+  .route li{padding:0 0 18px 34px}
+  .route .node{top:3px}
+  .route li.final .node{top:1px;left:-2px}
+  .route li:not(:last-child)::after{top:22px;left:7px;right:auto;width:2px;height:calc(100% - 20px)}
+  .stage-name{margin-top:0}
+}
+.route-for{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:20px;font-size:14px;color:var(--on-container-2)}
+.chip{font:inherit;font-size:14px;padding:6px 12px;border-radius:999px;border:1px solid rgba(255,255,255,.5);background:transparent;color:#fff;cursor:pointer}
+.chip:hover{border-color:#fff}
+.chip[aria-pressed="true"]{background:#fff;color:var(--container-deep);border-color:#fff;font-weight:600}
+.chip:focus-visible,.hero .btn:focus-visible{outline-color:#fff}
+.hero-note{margin-top:20px;padding-top:16px;border-top:1px solid rgba(255,255,255,.22);display:flex;gap:10px 16px;align-items:center;flex-wrap:wrap;font-size:14px;color:var(--on-container-2)}
+.hero-note p{margin:0;flex:1 1 320px}
+.hero .btn{background:transparent;color:#fff;border-color:rgba(255,255,255,.6)}
+.hero .btn:hover{border-color:#fff}
+.hero .btn.quiet{border-color:transparent;color:var(--on-container-2)}
+.jump{margin:16px 0 0;font-size:14px}
+.jump a{color:#fff;text-underline-offset:3px}
+@media (min-width:1080px){.jump{display:none}}
+
+/* Workspace */
+.workspace{display:grid;gap:24px;margin:24px 0}
+@media (min-width:1080px){.workspace{grid-template-columns:minmax(0,4fr) minmax(0,7fr);align-items:start}}
+.sheet{background:var(--surface);border:1px solid var(--rule);border-radius:var(--radius-m);min-width:0}
+.step,.block{padding:24px;border-top:1px solid var(--rule)}
+.step:first-child,.block:first-child{border-top:0}
+@media (max-width:520px){.step,.block{padding:20px 16px}}
+.step-head{display:flex;align-items:baseline;gap:10px;margin:0 0 6px}
+.step-num{font-stretch:122%;font-weight:760;color:var(--ink-3);font-size:20px;min-width:1.1em}
+h2{font-stretch:112%;font-weight:720;font-size:19px;line-height:1.25;margin:0;letter-spacing:-.005em}
+h3{font-size:15px;font-weight:650;margin:22px 0 4px}
+.intro{margin:0 0 16px;color:var(--ink-2);font-size:14px;max-width:62ch}
+.group-intro{margin:0 0 12px;color:var(--ink-2);font-size:13px;max-width:62ch}
+
+/* Fields */
+.fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px 16px}
+.fields .span-2{grid-column:1/-1}
+@media (max-width:520px){.fields{grid-template-columns:1fr}}
+.field{min-width:0}
+.field>label,.field>.label{display:flex;justify-content:space-between;align-items:baseline;gap:8px;font-size:13px;font-weight:550;color:var(--ink-2);margin-bottom:6px}
+input[type=text],input[type=number],select{width:100%;font:inherit;font-size:15px;color:var(--ink);background:var(--surface);border:1px solid var(--rule-strong);border-radius:var(--radius-s);padding:9px 11px;min-height:42px}
+input[type=number]{font-variant-numeric:tabular-nums}
+input:hover,select:hover{border-color:var(--ink-3)}
+input:disabled{background:var(--wash);color:var(--ink-3);border-color:var(--rule)}
+.hint{font-size:13px;color:var(--ink-3);margin:5px 0 0;line-height:1.4}
+.tag{font-size:12px;font-weight:600;padding:1px 7px;border-radius:4px;white-space:nowrap}
+.tag.you{background:var(--tint);color:var(--container-deep)}
+.tag.price,.tag.supplier{background:var(--wash);color:var(--ink-2)}
+.check{display:flex;gap:10px;align-items:flex-start;font-size:14px}
+.check input{width:18px;height:18px;margin:2px 0 0;accent-color:var(--container);flex:none}
+.check span{color:var(--ink-2)}
+.check strong{color:var(--ink);font-weight:600}
+input[type=range]{width:100%;accent-color:var(--container);margin:0}
+.range-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;align-items:center}
+.range-row output{min-width:4.2em;text-align:right;font-weight:650;font-variant-numeric:tabular-nums;font-size:14px}
+
+/* Supplier tabs */
+.tabs{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 20px;padding-bottom:18px;border-bottom:1px solid var(--rule)}
+.tab{font:inherit;font-size:14px;font-weight:600;background:var(--surface);border:1px solid var(--rule-strong);border-radius:999px;padding:6px 14px;color:var(--ink);cursor:pointer;white-space:nowrap;max-width:100%;line-height:1.3}
+.tab-name{display:inline-block;max-width:150px;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom}
+.tab:hover{border-color:var(--ink-2)}
+.tab[aria-selected="true"]{background:var(--ink);border-color:var(--ink);color:#fff}
+.tab-sub{font-weight:400;color:var(--ink-3);margin-left:6px}
+.tab[aria-selected="true"] .tab-sub{color:#C7D3DE}
+.tab.add{border-style:dashed;color:var(--container);background:transparent}
+.editor-foot{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-top:22px;padding-top:16px;border-top:1px solid var(--rule)}
+.editor-foot p{margin:0;font-size:14px;color:var(--ink-2);flex:1 1 260px}
+.editor-foot strong{color:var(--ink)}
+.rates-actions{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:14px}
+#rates-status{font-size:13px;color:var(--ink-2)}
+.rates-source{font-size:13px;color:var(--ink-2);margin:12px 0 0}
+
+/* Results */
+.results-head{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap}
+.scenario{flex:1 1 280px;max-width:380px}
+.scenario label{display:block;font-size:13px;font-weight:550;color:var(--ink-2);margin-bottom:6px}
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;margin:14px 0 16px;padding:0;list-style:none;font-size:13px;color:var(--ink-2)}
+.legend li{display:flex;align-items:center;gap:6px}
+.legend .sw{width:12px;height:12px;border-radius:3px;flex:none}
+.bars{display:grid;gap:6px}
+.bar-row{display:grid;grid-template-columns:minmax(104px,28%) minmax(0,1fr);gap:12px;align-items:center;padding:5px 6px;margin:0 -6px;border-radius:6px}
+.bar-row:hover,.bar-row:focus-visible{background:var(--wash)}
+.bar-name{font-size:14px;font-weight:600;line-height:1.25;overflow-wrap:anywhere}
+@media (max-width:520px){.bar-row{grid-template-columns:1fr;gap:4px}.bar-name small{display:inline;margin-left:6px}}
+.bar-name small{display:block;font-weight:400;color:var(--ink-3);font-size:12px}
+.bar-track{display:flex;align-items:center;gap:8px;border-left:1px solid #c2c2c2;min-height:30px}
+.bar{display:flex;gap:2px;height:20px;min-width:4px}
+.seg{height:100%;min-width:2px}
+.seg:last-child{border-radius:0 4px 4px 0}
+.bar-val{font-size:14px;font-weight:650;font-variant-numeric:tabular-nums;white-space:nowrap}
+.bar-missing{font-size:13px;color:var(--ink-3);padding-left:10px}
+.tip{position:fixed;z-index:30;pointer-events:none;background:var(--surface);border:1px solid var(--rule);border-radius:8px;padding:10px 12px;font-size:13px;width:250px;box-shadow:0 8px 24px rgba(20,40,58,.14);display:none}
+.tip-title{font-weight:650;margin:0 0 6px}
+.tip-row{display:grid;grid-template-columns:14px minmax(0,1fr) auto;gap:8px;align-items:center;color:var(--ink-2);line-height:1.6}
+.tip-row .key{width:12px;height:3px;border-radius:2px}
+.tip-row strong{color:var(--ink);font-variant-numeric:tabular-nums;font-weight:650}
+.tip-total{border-top:1px solid var(--rule);margin-top:6px;padding-top:6px;display:flex;justify-content:space-between;font-weight:650}
+
+.table-wrap{overflow-x:auto;margin:0 -24px;padding:0 24px}
+@media (max-width:520px){.table-wrap{margin:0 -16px;padding:0 16px}}
+table{border-collapse:collapse;width:100%;font-size:13.5px}
+.cost-table{min-width:600px}
+.score-table{min-width:640px}
+th{font-weight:600;color:var(--ink-2);font-size:13px;text-align:right;padding:8px 8px;border-bottom:1px solid var(--rule-strong);vertical-align:bottom;line-height:1.3}
+td{padding:10px 8px;border-bottom:1px solid var(--rule);text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap;vertical-align:top}
+th:first-child,td:first-child{text-align:left;padding-left:0}
+td:first-child{white-space:normal;min-width:150px}
+td .flag{margin:4px 0 0}
+td .sub,th .sub{display:block;font-size:12px;color:var(--ink-3);font-weight:400}
+td.total{font-weight:650}
+tr.pick td:first-child{box-shadow:inset 3px 0 0 var(--container);padding-left:10px}
+.flag{display:inline-block;font-size:12px;font-weight:600;color:var(--container-deep);background:var(--tint);border-radius:4px;padding:0 6px;margin-left:4px;white-space:nowrap}
+.muted{color:var(--ink-3)}
+.note{font-size:13px;color:var(--ink-2);margin:12px 0 0;max-width:72ch}
+.print-only{display:none}
+
+/* Guides */
+details.guide{background:var(--surface);border:1px solid var(--rule);border-radius:var(--radius-m);margin:0 0 16px}
+details.guide summary{cursor:pointer;padding:18px 24px;font-stretch:112%;font-weight:700;font-size:17px;list-style:none;display:flex;justify-content:space-between;gap:12px;align-items:center}
+details.guide summary::-webkit-details-marker{display:none}
+details.guide summary::after{content:"+";font-size:22px;font-weight:400;color:var(--ink-2);line-height:1}
+details.guide[open] summary::after{content:"\2212"}
+.guide-body{padding:0 24px 24px;max-width:none}
+.guide-body p,.guide-body li{max-width:75ch;font-size:15px}
+.guide-body ul{padding-left:20px}
+.matrix{min-width:780px;font-size:13px}
+.matrix th{text-align:center}
+.matrix td{text-align:center;padding:8px 6px}
+.matrix td.you{background:var(--tint);color:var(--container-deep);font-weight:650}
+.matrix td.sup{color:var(--ink-3)}
+.matrix th small{display:block;font-weight:400;color:var(--ink-3)}
+
+.foot{padding:20px 0 48px;color:var(--ink-2);font-size:14px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px 24px}
+.foot p{margin:0;max-width:70ch}
+
+.toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:var(--ink);color:#fff;border-radius:8px;padding:10px 12px 10px 16px;display:none;align-items:center;gap:12px;font-size:14px;z-index:40;box-shadow:0 8px 24px rgba(20,40,58,.25)}
+.toast button{font:inherit;font-weight:650;background:transparent;border:1px solid rgba(255,255,255,.5);color:#fff;border-radius:6px;padding:5px 10px;cursor:pointer}
+
+@media (prefers-reduced-motion:no-preference){
+  .seg{transition:flex-grow .25s ease}
+}
+@media print{
+  @page{margin:14mm}
+  body{background:#fff;font-size:12px}
+  .actions,.inputs,.route-for,.hero-note,.jump,.scenario,.tip,.toast,.no-print,#incoterms-guide{display:none!important}
+  .wrap{max-width:none;padding:0}
+  .top{padding:0 0 10px}
+  .hero{-webkit-print-color-adjust:exact;print-color-adjust:exact;break-inside:avoid;padding:20px 24px}
+  .workspace{display:block;margin:14px 0}
+  .sheet{border:0;break-inside:auto;border-radius:0}
+  .block{break-inside:avoid;padding:14px 0;border-top:1px solid var(--rule)}
+  .results .block:first-child{border-top:0}
+  #print-summary{margin:0 0 12px}
+  #print-summary h2{font-size:16px}
+  details.guide{border:0;border-top:1px solid var(--rule);border-radius:0}
+  details.guide summary,.guide-body{padding-left:0;padding-right:0}
+  details.guide[open] summary::after{content:""}
+  .table-wrap{overflow:visible;margin:0;padding:0}
+  .cost-table,.score-table{min-width:0}
+  .seg,.legend .sw,.tag,.flag{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .print-only{display:block!important}
+  details.guide{break-inside:avoid}
+  details.guide summary::after{content:""}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="brand">
+      <svg viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="6" fill="#1C4A73"/><rect x="8" y="9" width="16" height="9" rx="1" fill="#fff"/><rect x="5" y="21" width="22" height="3" fill="#E1463E"/></svg>
+      <div>
+        <p class="brand-name">Landed Cost Canada</p>
+        <span class="brand-sub">Import cost and supplier comparison</span>
+      </div>
+    </div>
+    <div class="actions">
+      <button type="button" class="btn" data-action="sample">Load sample</button>
+      <button type="button" class="btn" data-action="new">New comparison</button>
+      <button type="button" class="btn" data-action="csv">Download CSV</button>
+      <button type="button" class="btn primary" data-action="print">Print report</button>
+    </div>
+  </header>
+
+  <main>
+    <div class="print-only" id="print-summary"></div>
+    <section class="hero" aria-labelledby="hero-title" id="hero"></section>
+
+    <div class="workspace">
+      <div class="sheet inputs">
+        <section class="step" aria-labelledby="step1">
+          <div class="step-head"><span class="step-num" aria-hidden="true">1</span><h2 id="step1">Your order</h2></div>
+          <p class="intro">What you are buying and where it needs to arrive.</p>
+          <div class="fields">
+            <div class="field span-2"><label for="p-name">Product</label><input id="p-name" type="text" data-path="product.name" autocomplete="off" placeholder="For example, steel ball bearings"></div>
+            <div class="field"><label for="p-hs">HS code <span class="muted">optional</span></label><input id="p-hs" type="text" data-path="product.hs" autocomplete="off" placeholder="8482.10"></div>
+            <div class="field"><label for="p-dest">Delivered to</label><input id="p-dest" type="text" data-path="product.dest" autocomplete="off" placeholder="Toronto, ON"></div>
+            <div class="field"><label for="p-qty">Order quantity (units)</label><input id="p-qty" type="number" inputmode="decimal" min="0" step="any" data-path="product.qty"></div>
+            <div class="field"><label for="p-kg">Weight per unit (kg)</label><input id="p-kg" type="number" inputmode="decimal" min="0" step="any" data-path="product.kg"></div>
+            <div class="field span-2">
+              <label class="check" for="p-gst"><input id="p-gst" type="checkbox" data-path="includeGST"><span><strong>Include GST in landed cost</strong><br>GST is 5% of the value plus duty. GST-registered businesses can usually claim it back, so it is left out unless you switch this on.</span></label>
+            </div>
+          </div>
+        </section>
+
+        <section class="step" aria-labelledby="step2">
+          <div class="step-head"><span class="step-num" aria-hidden="true">2</span><h2 id="step2">Suppliers</h2></div>
+          <p class="intro">Add up to five quotes. Charges are for the whole order, in Canadian dollars.</p>
+          <div class="tabs" role="tablist" aria-label="Suppliers" id="tabs"></div>
+          <div id="editor" role="tabpanel"></div>
+        </section>
+
+        <section class="step" aria-labelledby="step3">
+          <div class="step-head"><span class="step-num" aria-hidden="true">3</span><h2 id="step3">Exchange rates</h2></div>
+          <p class="intro">How many Canadian dollars one unit of each quote currency buys.</p>
+          <div id="rates"></div>
+          <div class="rates-actions">
+            <button type="button" class="btn" data-action="fetch-rates" id="fetch-rates">Get today&rsquo;s rates</button>
+            <span id="rates-status" role="status"></span>
+          </div>
+          <p class="rates-source" id="rates-source"></p>
+        </section>
+
+        <section class="step" aria-labelledby="step4">
+          <div class="step-head"><span class="step-num" aria-hidden="true">4</span><h2 id="step4">What matters most</h2></div>
+          <p class="intro">Set how much each factor counts in the overall score. Cost, lead time and CO&#8322; are scored for you. You rate quality, reliability and risk for each supplier.</p>
+          <div class="fields" id="weights"></div>
+        </section>
+      </div>
+
+      <div class="sheet results">
+        <section class="block" aria-labelledby="chart-title">
+          <div class="results-head">
+            <div>
+              <h2 id="chart-title">Landed cost per unit</h2>
+              <p class="intro" style="margin:4px 0 0">Everything you pay to get one unit into your warehouse.</p>
+            </div>
+            <div class="scenario">
+              <label for="fx-shock">Exchange-rate scenario</label>
+              <div class="range-row"><input type="range" id="fx-shock" min="-20" max="20" step="1" value="0"><output id="fx-out" for="fx-shock">Today</output></div>
+              <p class="hint">Slide right to see costs if the Canadian dollar weakens.</p>
+            </div>
+          </div>
+          <ul class="legend" id="legend"></ul>
+          <div class="bars" id="bars"></div>
+        </section>
+
+        <section class="block" aria-labelledby="cost-title">
+          <h2 id="cost-title">Cost breakdown for the whole order</h2>
+          <p class="intro" style="margin:4px 0 14px">In Canadian dollars, using the exchange rates and scenario above.<span class="no-print"> Value for duty for each supplier is shown under its details in step 2.</span></p>
+          <div class="table-wrap"><table class="cost-table" id="cost-table"></table></div>
+        </section>
+
+        <section class="block" aria-labelledby="score-title">
+          <h2 id="score-title">Supplier scorecard</h2>
+          <p class="intro" style="margin:4px 0 14px">Each factor out of 10. Overall is out of 100, weighted by your priorities.</p>
+          <div class="table-wrap"><table class="score-table" id="score-table"></table></div>
+          <p class="note" id="weights-note"></p>
+        </section>
+      </div>
+    </div>
+
+    <details class="guide" id="incoterms-guide">
+      <summary>Incoterms 2020: who pays for what</summary>
+      <div class="guide-body">
+        <p>An Incoterm in a quote decides which costs are already in the supplier&rsquo;s price and which ones you pay on top. The calculator uses this table for each supplier.</p>
+        <div class="table-wrap"><table class="matrix" id="matrix"></table></div>
+        <p class="note">C-terms (CFR, CPT, CIF, CIP) are read here as delivery to a Canadian port or terminal. D-terms (DAP, DPU, DDP) are read as delivery to your warehouse. Under E, F and some C-terms, insurance is your choice; leave it at zero if you don&rsquo;t insure.</p>
+      </div>
+    </details>
+
+    <details class="guide" id="method-guide">
+      <summary>How the numbers work</summary>
+      <div class="guide-body">
+        <ul>
+          <li><strong>Value for duty</strong> is the supplier&rsquo;s price in Canadian dollars, plus any costs to get the goods to the place they are shipped to Canada from. Transport after that point isn&rsquo;t charged duty. When a C- or D-term price already includes freight, insurance or delivery, your estimate of those costs is taken out before duty is worked out. To claim this with the Canada Border Services Agency (CBSA), you need documents showing the actual transport costs.</li>
+          <li><strong>Duty</strong> is the value for duty times the duty rate. A surtax or counter-tariff works the same way and is added on top.</li>
+          <li><strong>GST</strong> is 5% of the value for duty plus duty and surtax. It only counts toward landed cost when you switch it on in step 1.</li>
+          <li><strong>Landed cost</strong> is the supplier&rsquo;s price plus every charge you pay under the Incoterm, plus duty and surtax (and GST if included). Per unit is that total divided by the order quantity.</li>
+          <li><strong>CO&#8322;</strong> is the shipment weight in tonnes times distance times a typical factor: sea 0.016, rail 0.026, truck 0.11 and air 0.65 kg CO&#8322;e per tonne-km. These are rounded from UK government greenhouse-gas conversion factors and are for comparison only.</li>
+          <li><strong>Scores.</strong> Landed cost, lead time and CO&#8322; are scored against the best supplier, which gets 10. A supplier costing 25% more scores 8. Quality, delivery reliability and supply risk use your own ratings. A missing lead time or distance scores a neutral 5.</li>
+          <li><strong>Exchange rates</strong> come from the Bank of Canada&rsquo;s daily rates when you press &ldquo;Get today&rsquo;s rates&rdquo;. If that service can&rsquo;t be reached, the European Central Bank&rsquo;s reference rates are used instead.</li>
+        </ul>
+        <p>Find duty rates in the <a href="https://www.cbsa-asfc.gc.ca/trade-commerce/tariff-tarif/" target="_blank" rel="noopener">CBSA Customs Tariff</a> or the <a href="https://www.tariffinder.ca/" target="_blank" rel="noopener">Canada Tariff Finder</a>. CBSA&rsquo;s guide <a href="https://www.cbsa-asfc.gc.ca/import/guide-3-eng.html" target="_blank" rel="noopener">Importing commercial goods: determining duties and taxes</a> explains the official method.</p>
+      </div>
+    </details>
+  </main>
+
+  <footer class="foot">
+    <p>Built by <a href="https://github.com/ashir-mansuri" target="_blank" rel="noopener">Ashir Mansuri</a>. Supply chain and procurement.</p>
+    <p>Planning estimates only. Confirm the tariff classification, duty rates and taxes with CBSA or a licensed customs broker before you buy. Your data stays in this browser.</p>
+  </footer>
+</div>
+
+<div class="tip" id="tip" role="tooltip"></div>
+<div class="toast" id="toast" role="status"><span id="toast-msg"></span><button type="button" data-action="undo" id="toast-undo">Undo</button></div>
+
+<script>
+(function () {
+  'use strict';
+
+  /* ---------- Reference data ---------- */
+  var STORE_KEY = 'landed-cost-canada-v1';
+  var MAX_SUPPLIERS = 5;
+  var GST_RATE = 0.05;
+  var EF = { sea: 0.016, rail: 0.026, road: 0.11, air: 0.65 }; // kg CO2e per tonne-km
+  var MODES = { sea: 'Sea', rail: 'Rail', road: 'Truck', air: 'Air' };
+  var CURRENCIES = ['CAD','USD','EUR','GBP','INR','CNY','MXN','JPY','KRW','VND','TWD','THB','TRY','BRL','CHF','SGD','AUD','HKD','IDR','MYR','ZAR','SEK','NOK'];
+  var SAMPLE_RATES = { USD:1.39, EUR:1.62, GBP:1.86, INR:0.0158, CNY:0.193, MXN:0.075, JPY:0.0092, KRW:0.00096, VND:0.000053, TWD:0.043, THB:0.042, TRY:0.033, BRL:0.25, CHF:1.74, SGD:1.07, AUD:0.91, HKD:0.179, IDR:0.000084, MYR:0.33, ZAR:0.079, SEK:0.147, NOK:0.137 };
+
+  function P(origin, freight, insurance, dest, broker, inland, duty) {
+    return { origin: origin, freight: freight, insurance: insurance, dest: dest, broker: broker, inland: inland, duty: duty };
+  }
+  var INCOTERMS = {
+    EXW: { name: 'Ex Works', pays: P(1,1,1,1,1,1,1), desc: 'You collect from the supplier’s site and handle everything from there.' },
+    FCA: { name: 'Free Carrier', pays: P(0,1,1,1,1,1,1), desc: 'Supplier clears export and hands the goods to your carrier.' },
+    FAS: { name: 'Free Alongside Ship', pays: P(0,1,1,1,1,1,1), desc: 'Supplier delivers next to the ship at the export port, cleared for export.' },
+    FOB: { name: 'Free On Board', pays: P(0,1,1,1,1,1,1), desc: 'Supplier loads the goods on the ship at the export port. You pay from there.' },
+    CFR: { name: 'Cost and Freight', pays: P(0,0,1,1,1,1,1), desc: 'Supplier pays sea freight to the Canadian port. You insure and take over there.' },
+    CPT: { name: 'Carriage Paid To', pays: P(0,0,1,1,1,1,1), desc: 'Supplier pays transport to a place in Canada. You insure and take over there.' },
+    CIF: { name: 'Cost, Insurance and Freight', pays: P(0,0,0,1,1,1,1), desc: 'Supplier pays sea freight and insurance to the Canadian port.' },
+    CIP: { name: 'Carriage and Insurance Paid To', pays: P(0,0,0,1,1,1,1), desc: 'Supplier pays transport and insurance to a place in Canada.' },
+    DAP: { name: 'Delivered At Place', pays: P(0,0,0,0,1,0,1), desc: 'Supplier delivers to your door. You clear customs and pay duty.' },
+    DPU: { name: 'Delivered at Place Unloaded', pays: P(0,0,0,0,1,0,1), desc: 'Supplier delivers and unloads at your door. You clear customs and pay duty.' },
+    DDP: { name: 'Delivered Duty Paid', pays: P(0,0,0,0,0,0,0), desc: 'Supplier delivers to your door with duty and taxes paid.' }
+  };
+  var TERM_ORDER = ['EXW','FCA','FAS','FOB','CFR','CPT','CIF','CIP','DAP','DPU','DDP'];
+
+  var COST_ITEMS = [
+    { key: 'origin', label: 'Pickup and export clearance', after: false },
+    { key: 'freight', label: 'Main freight', after: true },
+    { key: 'insurance', label: 'Cargo insurance', after: true },
+    { key: 'dest', label: 'Port or terminal charges in Canada', after: true },
+    { key: 'broker', label: 'Customs broker fee', after: false },
+    { key: 'inland', label: 'Delivery to your warehouse', after: true }
+  ];
+  var MATRIX_ROWS = [
+    { key: 'origin', label: 'Pickup and export clearance' },
+    { key: 'freight', label: 'Main freight' },
+    { key: 'insurance', label: 'Cargo insurance' },
+    { key: 'dest', label: 'Port or terminal charges in Canada' },
+    { key: 'broker', label: 'Customs broker' },
+    { key: 'duty', label: 'Duty and GST' },
+    { key: 'inland', label: 'Delivery to your warehouse' }
+  ];
+
+  var CRITERIA = [
+    { key: 'cost', label: 'Landed cost' },
+    { key: 'quality', label: 'Quality' },
+    { key: 'reliability', label: 'Delivery reliability' },
+    { key: 'lead', label: 'Lead time' },
+    { key: 'risk', label: 'Supply risk' },
+    { key: 'co2', label: 'CO₂ emissions' }
+  ];
+  var DEFAULT_WEIGHTS = { cost: 35, quality: 20, reliability: 15, lead: 15, risk: 10, co2: 5 };
+
+  var SERIES = [
+    { key: 'goods', label: 'Supplier price', color: 'var(--s-goods)' },
+    { key: 'ship', label: 'Shipping and charges', color: 'var(--s-ship)' },
+    { key: 'duty', label: 'Duty and surtax', color: 'var(--s-duty)' },
+    { key: 'gst', label: 'GST', color: 'var(--s-gst)' }
+  ];
+
+  /* ---------- Helpers ---------- */
+  function $(s, r) { return (r || document).querySelector(s); }
+  function $$(s, r) { return Array.prototype.slice.call((r || document).querySelectorAll(s)); }
+  function esc(v) {
+    return String(v == null ? '' : v).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+  function num(v) { var n = parseFloat(v); return isFinite(n) ? n : 0; }
+  function pos(v) { return Math.max(0, num(v)); }
+  function clamp(v, lo, hi) { return Math.min(hi, Math.max(lo, v)); }
+  function uid() { return Math.random().toString(36).slice(2, 9); }
+  function money(v, d) { return 'CA$' + (Math.abs(v) < 0.0005 ? 0 : v).toLocaleString('en-CA', { minimumFractionDigits: d, maximumFractionDigits: d }); }
+  function fmtTotal(v) { return money(v, 0); }
+  function fmtUnit(v) { return money(v, (v > 0 && v < 0.1) ? 3 : 2); }
+  function fmtNum(v, d) { return v.toLocaleString('en-CA', { minimumFractionDigits: d || 0, maximumFractionDigits: d || 0 }); }
+  function fmtPrice(v) { return v.toLocaleString('en-CA', { minimumFractionDigits: 2, maximumFractionDigits: 4 }); }
+  function plus(v) { return '+' + fmtUnit(v); }
+  function displayName(s, i) { return (s.name && s.name.trim()) || ('Supplier ' + (i + 1)); }
+
+  /* ---------- State ---------- */
+  function blankSupplier(name) {
+    return {
+      id: uid(), name: name || '', country: '', currency: 'USD', price: '', incoterm: 'FOB', lead: '',
+      costs: { origin: '', freight: '', insurance: '', dest: '', broker: '', inland: '' },
+      dutyPct: '', surtaxPct: '', quality: 7, reliability: 7, risk: 7,
+      mode: 'sea', distKm: '', inlandKm: ''
+    };
+  }
+  function baseState() {
+    return {
+      v: 1, isSample: false,
+      product: { name: '', hs: '', dest: '', qty: '', kg: '' },
+      includeGST: false,
+      rates: Object.assign({}, SAMPLE_RATES),
+      ratesSource: { type: 'sample' },
+      weights: Object.assign({}, DEFAULT_WEIGHTS),
+      fxShock: 0, active: 0, routeFor: -1,
+      suppliers: [blankSupplier('Supplier A'), blankSupplier('Supplier B')]
+    };
+  }
+  function sup(o) { var s = blankSupplier(o.name); Object.assign(s, o); s.costs = Object.assign(blankSupplier().costs, o.costs || {}); return s; }
+  function sampleState() {
+    var st = baseState();
+    st.isSample = true;
+    st.product = { name: 'Deep-groove ball bearings, 6204', hs: '8482.10', dest: 'Toronto, ON', qty: 5000, kg: 0.11 };
+    st.suppliers = [
+      sup({ name: 'Hamburg Bearings GmbH', country: 'Germany', currency: 'EUR', price: 2.45, incoterm: 'FCA', lead: 28,
+        costs: { freight: 1450, insurance: 55, dest: 420, broker: 210, inland: 650 }, dutyPct: 0, surtaxPct: 0,
+        quality: 9, reliability: 9, risk: 9, mode: 'sea', distKm: 5600, inlandKm: 540 }),
+      sup({ name: 'Gujarat Precision Bearings', country: 'India', currency: 'INR', price: 165, incoterm: 'FOB', lead: 42,
+        costs: { freight: 2300, insurance: 70, dest: 450, broker: 210, inland: 650 }, dutyPct: 5, surtaxPct: 0,
+        quality: 7, reliability: 7, risk: 7, mode: 'sea', distKm: 15500, inlandKm: 540 }),
+      sup({ name: 'Monterrey Rodamientos', country: 'Mexico', currency: 'USD', price: 2.60, incoterm: 'DAP', lead: 9,
+        costs: { freight: 1100, broker: 180 }, dutyPct: 0, surtaxPct: 0,
+        quality: 7, reliability: 8, risk: 8, mode: 'road', distKm: 3000, inlandKm: 0 }),
+      sup({ name: 'Ningbo Motion Parts', country: 'China', currency: 'CNY', price: 11.20, incoterm: 'CIF', lead: 38,
+        costs: { freight: 950, insurance: 45, dest: 480, broker: 210, inland: 1650 }, dutyPct: 5, surtaxPct: 0,
+        quality: 6, reliability: 6, risk: 5, mode: 'sea', distKm: 9800, inlandKm: 4400 })
+    ];
+    return st;
+  }
+  function normalize(st) {
+    if (!st || typeof st !== 'object' || !Array.isArray(st.suppliers) || !st.suppliers.length) return null;
+    var out = baseState();
+    Object.keys(out).forEach(function (k) { if (k in st) out[k] = st[k]; });
+    out.product = Object.assign(baseState().product, st.product || {});
+    out.weights = Object.assign({}, DEFAULT_WEIGHTS, st.weights || {});
+    out.rates = Object.assign({}, SAMPLE_RATES, st.rates || {});
+    if (!out.ratesSource || typeof out.ratesSource !== 'object') out.ratesSource = { type: 'sample' };
+    out.suppliers = st.suppliers.slice(0, MAX_SUPPLIERS).map(function (s) {
+      var m = sup(s || {});
+      if (!INCOTERMS[m.incoterm]) m.incoterm = 'FOB';
+      if (!EF[m.mode]) m.mode = 'sea';
+      if (CURRENCIES.indexOf(m.currency) < 0) m.currency = 'USD';
+      if (!m.id) m.id = uid();
+      return m;
+    });
+    out.active = clamp(out.active | 0, 0, out.suppliers.length - 1);
+    out.routeFor = (typeof out.routeFor === 'number' && out.routeFor < out.suppliers.length) ? out.routeFor : -1;
+    out.fxShock = clamp(num(out.fxShock), -20, 20);
+    out.includeGST = !!out.includeGST;
+    return out;
+  }
+  function load() {
+    try {
+      var raw = localStorage.getItem(STORE_KEY);
+      if (raw) { var st = normalize(JSON.parse(raw)); if (st) return st; }
+    } catch (e) { /* storage unavailable or corrupt: fall back to sample */ }
+    return sampleState();
+  }
+  var saveTimer = null;
+  function save() {
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(function () {
+      try { localStorage.setItem(STORE_KEY, JSON.stringify(state)); } catch (e) { /* ignore */ }
+    }, 250);
+  }
+
+  var state = load();
+  var lastRemoved = null;
+
+  /* ---------- Calculation ---------- */
+  function rateFor(cur) {
+    if (cur === 'CAD') return 1;
+    return pos(state.rates[cur]) * (1 + num(state.fxShock) / 100);
+  }
+  function calc(s, i) {
+    var q = pos(state.product.qty);
+    var term = INCOTERMS[s.incoterm] || INCOTERMS.FOB;
+    var p = term.pays;
+    var r = rateFor(s.currency);
+    var price = pos(s.price);
+    var goods = price * q * r;
+    var paid = {}, logistics = 0, deduct = 0;
+    COST_ITEMS.forEach(function (it) {
+      var v = pos(s.costs[it.key]);
+      if (p[it.key]) { paid[it.key] = v; logistics += v; }
+      else { paid[it.key] = 0; if (it.after) deduct += v; }
+    });
+    var vfd = Math.max(0, goods + (p.origin ? paid.origin : 0) - deduct);
+    var buyerImports = !!p.duty;
+    var duty = buyerImports ? vfd * pos(s.dutyPct) / 100 : 0;
+    var surtax = buyerImports ? vfd * pos(s.surtaxPct) / 100 : 0;
+    var gst = buyerImports ? (vfd + duty + surtax) * GST_RATE : 0;
+    var gstIn = state.includeGST ? gst : 0;
+    var total = goods + logistics + duty + surtax + gstIn;
+    var u = function (x) { return q > 0 ? x / q : 0; };
+    var s0 = u(goods), s1 = s0 + u(paid.origin), s2 = s1 + u(paid.freight + paid.insurance);
+    var s3 = s2 + u(paid.dest + paid.broker + duty + surtax + gstIn), s4 = s3 + u(paid.inland);
+    var tonnes = pos(state.product.kg) * q / 1000;
+    var co2 = tonnes * (pos(s.distKm) * (EF[s.mode] || EF.sea) + pos(s.inlandKm) * EF.road);
+    var missing = [];
+    if (!(q > 0)) missing.push('order quantity');
+    if (!(price > 0)) missing.push('unit price');
+    if (s.currency !== 'CAD' && !(pos(state.rates[s.currency]) > 0)) missing.push(s.currency + ' exchange rate');
+    return {
+      i: i, s: s, p: p, q: q, r: r, price: price, goods: goods, paid: paid, logistics: logistics, deduct: deduct,
+      vfd: vfd, duty: duty, surtax: surtax, gst: gst, gstIn: gstIn, total: total, perUnit: u(total),
+      stages: [s0, s1, s2, s3, s4], co2: co2, lead: pos(s.lead), buyerImports: buyerImports,
+      complete: missing.length === 0, missing: missing
+    };
+  }
+  function compute() {
+    var all = state.suppliers.map(calc);
+    var ok = all.filter(function (x) { return x.complete; });
+    var R = { all: all, ok: ok, best: null, cheapest: null, fastest: null, greenest: null };
+    if (!ok.length) return R;
+    var minTotal = Math.min.apply(null, ok.map(function (x) { return x.total; }));
+    var leads = ok.map(function (x) { return x.lead; }).filter(function (v) { return v > 0; });
+    var minLead = leads.length ? Math.min.apply(null, leads) : 0;
+    var co2s = ok.map(function (x) { return x.co2; }).filter(function (v) { return v > 0; });
+    var minCo2 = co2s.length ? Math.min.apply(null, co2s) : 0;
+    var W = state.weights;
+    var sumW = CRITERIA.reduce(function (a, c) { return a + pos(W[c.key]); }, 0);
+    ok.forEach(function (x) {
+      x.scores = {
+        cost: x.total > 0 ? 10 * minTotal / x.total : 10,
+        lead: x.lead > 0 ? 10 * minLead / x.lead : 5,
+        co2: x.co2 > 0 ? 10 * minCo2 / x.co2 : 5,
+        quality: clamp(num(x.s.quality) || 1, 1, 10),
+        reliability: clamp(num(x.s.reliability) || 1, 1, 10),
+        risk: clamp(num(x.s.risk) || 1, 1, 10)
+      };
+      x.overall = sumW > 0 ? CRITERIA.reduce(function (a, c) { return a + pos(W[c.key]) * x.scores[c.key]; }, 0) / sumW * 10 : 0;
+    });
+    R.sumW = sumW;
+    R.best = ok.slice().sort(function (a, b) { return (b.overall - a.overall) || (a.total - b.total); })[0];
+    R.cheapest = ok.slice().sort(function (a, b) { return a.total - b.total; })[0];
+    var withLead = ok.filter(function (x) { return x.lead > 0; });
+    R.fastest = withLead.length ? withLead.sort(function (a, b) { return a.lead - b.lead; })[0] : null;
+    var withCo2 = ok.filter(function (x) { return x.co2 > 0; });
+    R.greenest = withCo2.length ? withCo2.sort(function (a, b) { return a.co2 - b.co2; })[0] : null;
+    return R;
+  }
+
+  /* ---------- Static pieces ---------- */
+  function fillOrderFields() {
+    $$('[data-path]').forEach(function (el) {
+      var v = getPath(el.dataset.path);
+      if (el.type === 'checkbox') el.checked = !!v; else el.value = (v == null ? '' : v);
+    });
+    $('#fx-shock').value = state.fxShock;
+    updateFxLabel();
+  }
+  function getPath(path) { return path.split('.').reduce(function (o, k) { return o == null ? undefined : o[k]; }, state); }
+  function setPath(path, val) {
+    var keys = path.split('.'), o = state;
+    for (var i = 0; i < keys.length - 1; i++) o = o[keys[i]];
+    o[keys[keys.length - 1]] = val;
+  }
+
+  function renderWeights() {
+    $('#weights').innerHTML = CRITERIA.map(function (c) {
+      var id = 'w-' + c.key;
+      return '<div class="field"><label for="' + id + '">' + esc(c.label) + '</label>' +
+        '<div class="range-row"><input type="range" id="' + id + '" min="0" max="50" step="5" data-weight="' + c.key + '" value="' + pos(state.weights[c.key]) + '">' +
+        '<output id="' + id + '-out" for="' + id + '"></output></div></div>';
+    }).join('');
+    updateWeightOutputs();
+  }
+  function updateWeightOutputs() {
+    var sum = CRITERIA.reduce(function (a, c) { return a + pos(state.weights[c.key]); }, 0);
+    CRITERIA.forEach(function (c) {
+      var out = $('#w-' + c.key + '-out');
+      if (out) out.textContent = sum > 0 ? Math.round(pos(state.weights[c.key]) / sum * 100) + '%' : '0%';
+    });
+  }
+
+  function renderMatrix() {
+    var head = '<thead><tr><th scope="col">Cost</th>' + TERM_ORDER.map(function (t) {
+      return '<th scope="col">' + t + '<small>' + esc(INCOTERMS[t].name) + '</small></th>';
+    }).join('') + '</tr></thead>';
+    var body = '<tbody>' + MATRIX_ROWS.map(function (row) {
+      return '<tr><td>' + esc(row.label) + '</td>' + TERM_ORDER.map(function (t) {
+        var you = INCOTERMS[t].pays[row.key];
+        return you ? '<td class="you">You</td>' : '<td class="sup">Supplier</td>';
+      }).join('') + '</tr>';
+    }).join('') + '</tbody>';
+    $('#matrix').innerHTML = '<caption class="print-only">Who pays under each Incoterm</caption>' + head + body;
+  }
+
+  /* ---------- Suppliers: tabs and editor ---------- */
+  function renderTabs() {
+    var html = state.suppliers.map(function (s, i) {
+      var sel = i === state.active;
+      return '<button type="button" class="tab" role="tab" id="tab-' + i + '" aria-selected="' + sel + '" aria-controls="editor" tabindex="' + (sel ? 0 : -1) + '" data-action="tab" data-index="' + i + '" title="' + esc(displayName(s, i) + (s.country ? ', ' + s.country : '')) + '">' +
+        '<span class="tab-name">' + esc(displayName(s, i)) + '</span>' + (s.country ? '<span class="tab-sub">' + esc(s.country) + '</span>' : '') + '</button>';
+    }).join('');
+    if (state.suppliers.length < MAX_SUPPLIERS) html += '<button type="button" class="tab add" data-action="add">+ Add supplier</button>';
+    $('#tabs').innerHTML = html;
+  }
+
+  function numField(id, label, attr, value, extra) {
+    return '<div class="field' + (extra || '') + '"><label for="' + id + '">' + label + '</label>' +
+      '<input id="' + id + '" type="number" inputmode="decimal" min="0" step="any" ' + attr + ' value="' + esc(value) + '"></div>';
+  }
+  function rangeField(id, label, key, value, hint) {
+    return '<div class="field"><label for="' + id + '">' + label + '</label><div class="range-row">' +
+      '<input type="range" id="' + id + '" min="1" max="10" step="1" data-s="' + key + '" value="' + clamp(num(value) || 1, 1, 10) + '">' +
+      '<output id="' + id + '-out" for="' + id + '">' + clamp(num(value) || 1, 1, 10) + ' / 10</output></div>' +
+      (hint ? '<p class="hint">' + hint + '</p>' : '') + '</div>';
+  }
+
+  function renderEditor(focusId) {
+    var s = state.suppliers[state.active];
+    var curOpts = CURRENCIES.map(function (c) { return '<option value="' + c + '"' + (c === s.currency ? ' selected' : '') + '>' + c + '</option>'; }).join('');
+    var termOpts = TERM_ORDER.map(function (t) { return '<option value="' + t + '"' + (t === s.incoterm ? ' selected' : '') + '>' + t + ', ' + esc(INCOTERMS[t].name) + '</option>'; }).join('');
+    var modeOpts = Object.keys(MODES).map(function (m) { return '<option value="' + m + '"' + (m === s.mode ? ' selected' : '') + '>' + MODES[m] + '</option>'; }).join('');
+    var costs = COST_ITEMS.map(function (it) {
+      var id = 'c-' + it.key;
+      return '<div class="field" data-costfield="' + it.key + '"><label for="' + id + '"><span>' + esc(it.label) + '</span><span class="tag" data-tag></span></label>' +
+        '<input id="' + id + '" type="number" inputmode="decimal" min="0" step="any" data-cost="' + it.key + '" value="' + esc(s.costs[it.key]) + '">' +
+        '<p class="hint" data-hint></p></div>';
+    }).join('');
+
+    var html =
+      '<div class="fields">' +
+        '<div class="field"><label for="s-name">Supplier name</label><input id="s-name" type="text" autocomplete="off" data-s="name" value="' + esc(s.name) + '"></div>' +
+        '<div class="field"><label for="s-country">Country</label><input id="s-country" type="text" autocomplete="off" data-s="country" value="' + esc(s.country) + '"></div>' +
+        numField('s-price', 'Unit price', 'data-s="price"', s.price) +
+        '<div class="field"><label for="s-cur">Quote currency</label><select id="s-cur" data-s="currency">' + curOpts + '</select></div>' +
+        '<div class="field span-2"><label for="s-term">Incoterm</label><select id="s-term" data-s="incoterm">' + termOpts + '</select><p class="hint" id="term-hint"></p></div>' +
+        numField('s-lead', 'Lead time (days)', 'data-s="lead"', s.lead) +
+      '</div>' +
+      '<h3>Shipping and charges for this order</h3>' +
+      '<p class="group-intro">In Canadian dollars. The Incoterm decides which of these you pay.</p>' +
+      '<div class="fields">' + costs + '</div>' +
+      '<h3>Duty</h3>' +
+      '<p class="group-intro" id="duty-intro">Look up the rate for your HS code and the country of origin in the <a href="https://www.cbsa-asfc.gc.ca/trade-commerce/tariff-tarif/" target="_blank" rel="noopener">CBSA Customs Tariff</a> or the <a href="https://www.tariffinder.ca/" target="_blank" rel="noopener">Canada Tariff Finder</a>.</p>' +
+      '<div class="fields">' +
+        numField('s-duty', 'Duty rate (%)', 'data-s="dutyPct" data-dutyfield', s.dutyPct) +
+        numField('s-surtax', 'Surtax or counter-tariff (%)', 'data-s="surtaxPct" data-dutyfield', s.surtaxPct) +
+      '</div>' +
+      '<h3>Your rating</h3>' +
+      '<p class="group-intro">From 1 (poor) to 10 (excellent), based on samples, audits, references or past orders.</p>' +
+      '<div class="fields">' +
+        rangeField('s-quality', 'Quality', 'quality', s.quality) +
+        rangeField('s-rel', 'Delivery reliability', 'reliability', s.reliability) +
+        rangeField('s-risk', 'Supply risk', 'risk', s.risk, '10 means very low risk: stable country, route and supplier finances.') +
+      '</div>' +
+      '<h3>Transport route</h3>' +
+      '<p class="group-intro">Used for the CO₂ estimate.</p>' +
+      '<div class="fields">' +
+        '<div class="field"><label for="s-mode">Main transport</label><select id="s-mode" data-s="mode">' + modeOpts + '</select></div>' +
+        numField('s-dist', 'Main distance (km)', 'data-s="distKm"', s.distKm) +
+        numField('s-inland', 'Trucking in Canada (km)', 'data-s="inlandKm"', s.inlandKm) +
+      '</div>' +
+      '<div class="editor-foot"><p id="sup-summary"></p>' +
+        (state.suppliers.length > 1 ? '<button type="button" class="btn quiet" data-action="remove">Remove this supplier</button>' : '') +
+      '</div>';
+    var ed = $('#editor');
+    ed.innerHTML = html;
+    ed.setAttribute('aria-labelledby', 'tab-' + state.active);
+    applyTermStatus();
+    if (focusId) { var f = document.getElementById(focusId); if (f) f.focus(); }
+  }
+
+  function applyTermStatus() {
+    var s = state.suppliers[state.active];
+    var term = INCOTERMS[s.incoterm] || INCOTERMS.FOB;
+    var hint = $('#term-hint');
+    if (hint) hint.textContent = term.desc;
+    COST_ITEMS.forEach(function (it) {
+      var box = $('[data-costfield="' + it.key + '"]');
+      if (!box) return;
+      var tag = $('[data-tag]', box), h = $('[data-hint]', box), input = $('input', box);
+      var you = !!term.pays[it.key];
+      if (you) {
+        tag.className = 'tag you'; tag.textContent = 'You pay';
+        input.disabled = false;
+        h.textContent = it.key === 'origin' ? 'Counts toward the value for duty.' : '';
+      } else if (it.after) {
+        tag.className = 'tag price'; tag.textContent = 'In supplier price';
+        input.disabled = false;
+        h.textContent = 'Optional. Enter the amount included in the price so it can be taken out of the duty calculation.';
+      } else {
+        tag.className = 'tag supplier'; tag.textContent = 'Paid by supplier';
+        input.disabled = true;
+        h.textContent = '';
+      }
+      h.hidden = !h.textContent;
+    });
+    var ddp = !term.pays.duty;
+    $$('[data-dutyfield]').forEach(function (el) { el.disabled = ddp; });
+    var di = $('#duty-intro');
+    if (di) di.hidden = false;
+    if (ddp && di && !di.dataset.ddp) {
+      di.dataset.orig = di.innerHTML;
+      di.dataset.ddp = '1';
+      di.textContent = 'Under DDP the supplier is the importer and pays duty and taxes, so they are already in the price.';
+    } else if (!ddp && di && di.dataset.ddp) {
+      di.innerHTML = di.dataset.orig;
+      delete di.dataset.ddp;
+    }
+  }
+
+  /* ---------- Exchange rates ---------- */
+  function currenciesInUse() {
+    var seen = [];
+    state.suppliers.forEach(function (s) { if (s.currency !== 'CAD' && seen.indexOf(s.currency) < 0) seen.push(s.currency); });
+    return seen;
+  }
+  function renderRates() {
+    var cur = currenciesInUse();
+    var box = $('#rates');
+    if (!cur.length) { box.innerHTML = '<p class="hint" style="margin:0">All your suppliers quote in Canadian dollars, so no exchange rate is needed.</p>'; }
+    else {
+      box.innerHTML = '<div class="fields">' + cur.map(function (c) {
+        return numField('r-' + c, '1 ' + c + ' in CA$', 'data-rate="' + c + '"', state.rates[c] == null ? '' : state.rates[c]);
+      }).join('') + '</div>';
+    }
+    renderRatesSource();
+  }
+  function renderRatesSource() {
+    var src = state.ratesSource || { type: 'sample' };
+    var t;
+    if (src.type === 'live') t = 'Daily rates from ' + src.source + (src.date ? ', ' + formatDate(src.date) : '') + '.';
+    else if (src.type === 'manual') t = 'Rates you entered.';
+    else t = 'Sample rates. Get today’s rates or type in your own before relying on the results.';
+    $('#rates-source').textContent = t;
+  }
+  function formatDate(d) {
+    var dt = new Date(d + 'T12:00:00');
+    return isNaN(dt) ? d : dt.toLocaleDateString('en-CA', { day: 'numeric', month: 'short', year: 'numeric' });
+  }
+  function getJson(url) {
+    var ctl = ('AbortController' in window) ? new AbortController() : null;
+    var timer = setTimeout(function () { if (ctl) ctl.abort(); }, 8000);
+    return fetch(url, { signal: ctl ? ctl.signal : undefined, cache: 'no-store' })
+      .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+      .finally(function () { clearTimeout(timer); });
+  }
+  function fetchRates() {
+    var btn = $('#fetch-rates'), status = $('#rates-status');
+    btn.disabled = true;
+    status.textContent = 'Getting today’s rates…';
+    var fromBoC = getJson('https://www.bankofcanada.ca/valet/observations/group/FX_RATES_DAILY/json?recent=1').then(function (d) {
+      var obs = d && d.observations && d.observations[d.observations.length - 1];
+      var rates = {};
+      if (obs) Object.keys(obs).forEach(function (k) {
+        var m = /^FX([A-Z]{3})CAD$/.exec(k);
+        if (m && obs[k] && num(obs[k].v) > 0) rates[m[1]] = num(obs[k].v);
+      });
+      if (!Object.keys(rates).length) throw new Error('empty');
+      return { rates: rates, source: 'the Bank of Canada', date: obs.d };
+    });
+    function fromEcb(url) {
+      return getJson(url).then(function (d) {
+        var rates = {};
+        Object.keys((d && d.rates) || {}).forEach(function (k) { var v = num(d.rates[k]); if (v > 0) rates[k] = 1 / v; });
+        if (!Object.keys(rates).length) throw new Error('empty');
+        return { rates: rates, source: 'the European Central Bank', date: d.date };
+      });
+    }
+    fromBoC
+      .catch(function () { return fromEcb('https://api.frankfurter.dev/v1/latest?base=CAD'); })
+      .catch(function () { return fromEcb('https://api.frankfurter.app/latest?from=CAD'); })
+      .then(function (got) {
+        CURRENCIES.forEach(function (c) { if (c !== 'CAD' && got.rates[c]) state.rates[c] = +got.rates[c].toPrecision(6); });
+        var missing = currenciesInUse().filter(function (c) { return !got.rates[c]; });
+        state.ratesSource = { type: 'live', source: got.source, date: got.date };
+        renderRates(); renderOutputs(); save();
+        status.textContent = missing.length ? 'Updated. No rate was available for ' + missing.join(', ') + ', so type it in.' : 'Updated.';
+      })
+      .catch(function () {
+        status.textContent = 'Couldn’t reach the rate services. Check your connection or type the rates in.';
+      })
+      .finally(function () { btn.disabled = false; });
+  }
+
+  /* ---------- Outputs ---------- */
+  function updateFxLabel() {
+    var v = num(state.fxShock);
+    $('#fx-out').textContent = v === 0 ? 'Today' : (Math.abs(v) + '% ' + (v > 0 ? 'weaker' : 'stronger'));
+  }
+  function scenarioText() {
+    var v = num(state.fxShock);
+    return v === 0 ? '' : 'Scenario: Canadian dollar ' + Math.abs(v) + '% ' + (v > 0 ? 'weaker' : 'stronger') + ' than the rates entered.';
+  }
+
+  function renderHero(R) {
+    var hero = $('#hero');
+    var note = state.isSample
+      ? '<div class="hero-note"><p>This is sample data. The quotes, duty rates and exchange rates are made up to show how the tool works.</p>' +
+        '<button type="button" class="btn" data-action="new">Start a new comparison</button><button type="button" class="btn quiet" data-action="hide-note">Hide this note</button></div>'
+      : '';
+    if (!R.best) {
+      hero.innerHTML = '<h1 id="hero-title">See what your goods really cost once they land in Canada</h1>' +
+        '<p class="facts">Fill in your order and at least one supplier&rsquo;s unit price. The route from the supplier to your warehouse appears here, with the cost added at each stage.</p>' + note;
+      return;
+    }
+    var x = (state.routeFor >= 0 && R.all[state.routeFor] && R.all[state.routeFor].complete) ? R.all[state.routeFor] : R.best;
+    var isBest = x === R.best;
+    var s = x.s, p = x.p, st = x.stages;
+    var name = displayName(s, x.i), dest = (state.product.dest || '').trim();
+    var title = isBest ? (R.ok.length > 1 ? esc(name) + ' is your best overall pick' : 'How ' + esc(name) + ' lands in Canada') : 'How ' + esc(name) + ' lands in Canada';
+
+    var facts = [];
+    var sc = scenarioText(); if (sc) facts.push('<strong>' + esc(sc) + '</strong>');
+    if (R.ok.length > 1) {
+      if (isBest) facts.push('It scores ' + Math.round(x.overall) + ' out of 100 on your priorities.');
+      else facts.push('It scores ' + Math.round(x.overall) + ' out of 100. Best overall is ' + esc(displayName(R.best.s, R.best.i)) + ' with ' + Math.round(R.best.overall) + '.');
+      facts.push('Cheapest landed: ' + esc(displayName(R.cheapest.s, R.cheapest.i)) + ', ' + fmtUnit(R.cheapest.perUnit) + ' a unit.');
+      if (R.fastest) facts.push('Fastest: ' + esc(displayName(R.fastest.s, R.fastest.i)) + ', ' + fmtNum(R.fastest.lead) + ' days.');
+      if (R.greenest) facts.push('Lowest CO₂: ' + esc(displayName(R.greenest.s, R.greenest.i)) + ', ' + fmtNum(R.greenest.co2) + ' kg.');
+    } else {
+      facts.push('Add another supplier to compare them side by side.');
+    }
+
+    var q = x.q;
+    var dutyU = (x.duty + x.surtax) / q;
+    var stages = [
+      { name: 'Supplier price, ' + s.incoterm, value: st[0],
+        add: s.currency === 'CAD' ? 'Quoted in CA$' : fmtPrice(x.price) + ' ' + s.currency + ' a unit' },
+      { name: 'Export', value: st[1], add: p.origin ? plus(st[1] - st[0]) : 'In supplier price' },
+      { name: 'Main transport, ' + MODES[s.mode].toLowerCase(), value: st[2],
+        add: (p.freight || p.insurance) ? plus(st[2] - st[1]) : 'In supplier price' },
+      { name: 'Port and customs in Canada', value: st[3], cls: 'border',
+        add: x.buyerImports ? plus(st[3] - st[2]) + (dutyU > 0 ? ', including ' + fmtUnit(dutyU) + ' duty' : '') : 'Duty paid by supplier' },
+      { name: 'Your warehouse' + (dest ? ' in ' + dest : ''), value: st[4], cls: 'final',
+        add: p.inland ? plus(st[4] - st[3]) + ' delivery' : 'Delivery in supplier price', note: 'Landed cost a unit' }
+    ];
+    var route = '<ol class="route" aria-label="Cost per unit at each stage">' + stages.map(function (g, k) {
+      var cls = (g.cls || '') + (k >= 3 ? ' after-border' : '');
+      return '<li class="' + cls.trim() + '"><span class="node" aria-hidden="true"></span>' +
+        '<span class="stage-name">' + esc(g.name) + '</span>' +
+        '<span class="stage-value">' + fmtUnit(g.value) + '</span>' +
+        (g.note ? '<span class="stage-note">' + esc(g.note) + '</span>' : '') +
+        '<span class="stage-add">' + esc(g.add) + '</span></li>';
+    }).join('') + '</ol>';
+
+    var chips = '';
+    if (R.ok.length > 1) {
+      chips = '<div class="route-for" role="group" aria-label="Show the route for"><span>Show the route for</span>' +
+        R.ok.map(function (o) {
+          var pressed = o === x;
+          var sameCountry = R.ok.filter(function (z) { return z.s.country && z.s.country === o.s.country; }).length;
+          var chipLabel = (o.s.country && sameCountry === 1) ? o.s.country : displayName(o.s, o.i);
+          return '<button type="button" class="chip" aria-pressed="' + pressed + '" data-action="route" data-index="' + o.i + '">' +
+            esc(chipLabel) + '</button>';
+        }).join('') + '</div>';
+    }
+    var jump = '<p class="jump"><a href="#chart-title">See the full comparison</a></p>';
+    hero.innerHTML = '<h1 id="hero-title">' + title + '</h1><p class="facts">' + facts.join(' ') + '</p>' + route + chips + jump + note;
+  }
+
+  function segValues(x) {
+    var q = x.q || 1;
+    return { goods: x.goods / q, ship: x.logistics / q, duty: (x.duty + x.surtax) / q, gst: x.gstIn / q };
+  }
+  function activeSeries() { return SERIES.filter(function (s) { return s.key !== 'gst' || state.includeGST; }); }
+
+  function renderChart(R) {
+    var series = activeSeries();
+    $('#legend').innerHTML = series.map(function (s) {
+      return '<li><span class="sw" style="background:' + s.color + '"></span>' + esc(s.label) + '</li>';
+    }).join('');
+    var max = Math.max.apply(null, R.ok.map(function (x) { return x.perUnit; }).concat([0]));
+    $('#bars').innerHTML = R.all.map(function (x) {
+      var name = displayName(x.s, x.i);
+      var label = '<div class="bar-name">' + esc(name) + (x.s.country ? '<small>' + esc(x.s.country) + '</small>' : '') + '</div>';
+      if (!x.complete) {
+        return '<div class="bar-row">' + label + '<div class="bar-track"><span class="bar-missing">Add the ' + esc(x.missing.join(' and ')) + '</span></div></div>';
+      }
+      var v = segValues(x);
+      var width = max > 0 ? (x.perUnit / max) * 80 : 0;
+      var segs = series.filter(function (s) { return v[s.key] > 0; }).map(function (s) {
+        return '<span class="seg" style="flex:' + v[s.key].toFixed(6) + ' 1 0;background:' + s.color + '"></span>';
+      }).join('');
+      var aria = name + ': ' + fmtUnit(x.perUnit) + ' a unit landed. ' + series.map(function (s) { return s.label + ' ' + fmtUnit(v[s.key]); }).join(', ') + '.';
+      return '<div class="bar-row" tabindex="0" data-bar="' + x.i + '" aria-label="' + esc(aria) + '">' + label +
+        '<div class="bar-track"><div class="bar" style="width:' + width.toFixed(2) + '%">' + segs + '</div>' +
+        '<span class="bar-val">' + fmtUnit(x.perUnit) + '</span></div></div>';
+    }).join('');
+  }
+
+  function renderCostTable(R) {
+    var gstHead = state.includeGST ? 'GST' : 'GST<span class="sub">not in total</span>';
+    var head = '<thead><tr><th scope="col">Supplier</th><th scope="col">Supplier price</th><th scope="col">Shipping and charges</th>' +
+      '<th scope="col">Duty and surtax</th><th scope="col">' + gstHead + '</th>' +
+      '<th scope="col">Landed total</th><th scope="col">Per unit</th><th scope="col">vs cheapest</th></tr></thead>';
+    var d = function (v) { return '$' + fmtNum(v); };
+    var rows = R.all.map(function (x) {
+      var isPick = R.best === x && R.ok.length > 1;
+      var name = esc(displayName(x.s, x.i)) + '<span class="sub">' + esc([x.s.country, x.s.incoterm].filter(Boolean).join(', ')) + '</span>' + (isPick ? '<span class="flag">Best overall</span>' : '');
+      if (!x.complete) return '<tr><td>' + name + '</td><td colspan="7" class="muted" style="text-align:left">Add the ' + esc(x.missing.join(' and ')) + '.</td></tr>';
+      var diff = R.cheapest && x !== R.cheapest ? '+' + fmtNum((x.total / R.cheapest.total - 1) * 100, 1) + '%' : '<span class="flag">Lowest</span>';
+      var pick = isPick ? ' class="pick"' : '';
+      return '<tr' + pick + '><td>' + name + '</td><td>' + d(x.goods) + '</td><td>' + d(x.logistics) + '</td>' +
+        '<td>' + (x.buyerImports ? d(x.duty + x.surtax) : '<span class="muted">Supplier</span>') + '</td>' +
+        '<td' + (state.includeGST ? '' : ' class="muted"') + '>' + (x.buyerImports ? d(x.gst) : 'Supplier') + '</td>' +
+        '<td class="total">' + d(x.total) + '</td><td class="total">' + fmtUnit(x.perUnit).replace('CA$', '$') + '</td><td>' + diff + '</td></tr>';
+    }).join('');
+    $('#cost-table').innerHTML = head + '<tbody>' + rows + '</tbody>';
+  }
+
+  function renderScoreTable(R) {
+    var head = '<thead><tr><th scope="col">Supplier</th>' + CRITERIA.map(function (c) { return '<th scope="col">' + esc(c.label) + '</th>'; }).join('') +
+      '<th scope="col">Overall</th></tr></thead>';
+    var rows = R.all.map(function (x) {
+      var pick = x.complete && R.best === x && R.ok.length > 1;
+      var name = esc(displayName(x.s, x.i)) + (x.s.country ? '<span class="sub">' + esc(x.s.country) + '</span>' : '') + (pick ? '<span class="flag">Best overall</span>' : '');
+      if (!x.complete) return '<tr><td>' + name + '</td><td colspan="7" class="muted" style="text-align:left">Not scored yet.</td></tr>';
+      var sc = x.scores;
+      function cell(v, sub) { return '<td>' + fmtNum(v, 1) + (sub ? '<span class="sub">' + sub + '</span>' : '') + '</td>'; }
+      return '<tr' + (pick ? ' class="pick"' : '') + '><td>' + name + '</td>' +
+        cell(sc.cost, fmtUnit(x.perUnit)) + cell(sc.quality) + cell(sc.reliability) +
+        cell(sc.lead, x.lead > 0 ? fmtNum(x.lead) + ' days' : 'not set') + cell(sc.risk) +
+        cell(sc.co2, x.co2 > 0 ? fmtNum(x.co2) + ' kg' : 'not set') +
+        '<td class="total">' + Math.round(x.overall) + '</td></tr>';
+    }).join('');
+    $('#score-table').innerHTML = head + '<tbody>' + rows + '</tbody>';
+    var sum = CRITERIA.reduce(function (a, c) { return a + pos(state.weights[c.key]); }, 0);
+    $('#weights-note').textContent = sum > 0
+      ? 'Weights: ' + CRITERIA.map(function (c) { return c.label + ' ' + Math.round(pos(state.weights[c.key]) / sum * 100) + '%'; }).join(', ') + '.'
+      : 'All weights are at zero. Set at least one in step 4 to get an overall score.';
+  }
+
+  function renderSupplierSummary(R) {
+    var el = $('#sup-summary');
+    if (!el) return;
+    var x = R.all[state.active];
+    if (!x) return;
+    if (!x.complete) { el.textContent = 'Add the ' + x.missing.join(' and ') + ' to see this supplier’s landed cost.'; return; }
+    el.innerHTML = (x.buyerImports ? 'Value for duty <strong>' + fmtTotal(x.vfd) + '</strong>. ' : '') +
+      'Landed cost <strong>' + fmtTotal(x.total) + '</strong>, or <strong>' + fmtUnit(x.perUnit) + '</strong> a unit.';
+  }
+
+  function renderPrintSummary(R) {
+    var pr = state.product;
+    var src = state.ratesSource || {};
+    var rates = currenciesInUse().map(function (c) { return '1 ' + c + ' = CA$' + pos(state.rates[c]); }).join(', ');
+    var lines = [
+      '<h2>Landed cost comparison</h2>',
+      '<p class="note">' + esc([pr.name || 'Product not named', pr.hs ? 'HS ' + pr.hs : '', pos(pr.qty) ? fmtNum(pos(pr.qty)) + ' units' : '', pr.dest ? 'delivered to ' + pr.dest : ''].filter(Boolean).join(', ')) + '.</p>',
+      '<p class="note">Prepared ' + esc(new Date().toLocaleDateString('en-CA', { day: 'numeric', month: 'long', year: 'numeric' })) + '. ' +
+        (rates ? 'Exchange rates: ' + esc(rates) + ' (' + esc(src.type === 'live' ? src.source + (src.date ? ', ' + src.date : '') : src.type === 'manual' ? 'entered by user' : 'sample rates') + '). ' : '') +
+        esc(scenarioText()) + ' GST ' + (state.includeGST ? 'is' : 'is not') + ' included in landed cost.' +
+        (state.isSample ? ' Sample data: figures are illustrative.' : '') + '</p>'
+    ];
+    $('#print-summary').innerHTML = lines.join('');
+  }
+
+  var lastR = null;
+  function renderOutputs() {
+    var R = compute();
+    lastR = R;
+    renderHero(R);
+    renderChart(R);
+    renderCostTable(R);
+    renderScoreTable(R);
+    renderSupplierSummary(R);
+    renderPrintSummary(R);
+  }
+
+  function renderAll() {
+    fillOrderFields();
+    renderTabs();
+    renderEditor();
+    renderRates();
+    renderWeights();
+    renderOutputs();
+  }
+
+  /* ---------- Tooltip ---------- */
+  var tip = $('#tip');
+  function tipHtml(i) {
+    var x = lastR && lastR.all[i];
+    if (!x || !x.complete) return '';
+    var v = segValues(x);
+    return '<p class="tip-title">' + esc(displayName(x.s, x.i)) + '</p>' + activeSeries().map(function (s) {
+      return '<div class="tip-row"><span class="key" style="background:' + s.color + '"></span><span>' + esc(s.label) + '</span><strong>' + fmtUnit(v[s.key]) + '</strong></div>';
+    }).join('') + '<div class="tip-total"><span>Landed, a unit</span><span>' + fmtUnit(x.perUnit) + '</span></div>';
+  }
+  function placeTip(xp, yp) {
+    var w = tip.offsetWidth, h = tip.offsetHeight;
+    var left = Math.min(xp + 14, window.innerWidth - w - 8);
+    var top = yp + 16;
+    if (top + h > window.innerHeight - 8) top = yp - h - 12;
+    tip.style.left = Math.max(8, left) + 'px';
+    tip.style.top = Math.max(8, top) + 'px';
+  }
+  function showTip(row, xp, yp) {
+    var html = tipHtml(+row.dataset.bar);
+    if (!html) return hideTip();
+    tip.innerHTML = html;
+    tip.style.display = 'block';
+    placeTip(xp, yp);
+  }
+  function hideTip() { tip.style.display = 'none'; }
+  var bars = $('#bars');
+  bars.addEventListener('pointermove', function (e) {
+    var row = e.target.closest('[data-bar]');
+    if (row && e.pointerType !== 'touch') showTip(row, e.clientX, e.clientY); else if (!row) hideTip();
+  });
+  bars.addEventListener('pointerleave', hideTip);
+  bars.addEventListener('focusin', function (e) {
+    var row = e.target.closest('[data-bar]');
+    if (!row) return;
+    var r = row.getBoundingClientRect();
+    showTip(row, r.left + Math.min(160, r.width / 3), r.bottom - 10);
+  });
+  bars.addEventListener('focusout', hideTip);
+  window.addEventListener('scroll', hideTip, { passive: true });
+
+  /* ---------- Toast ---------- */
+  var toastTimer = null;
+  function toast(msg, undo) {
+    $('#toast-msg').textContent = msg;
+    $('#toast-undo').hidden = !undo;
+    var t = $('#toast');
+    t.style.display = 'flex';
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { t.style.display = 'none'; lastRemoved = null; }, 7000);
+  }
+
+  /* ---------- CSV ---------- */
+  function csvCell(v) {
+    var s = String(v == null ? '' : v);
+    if (/^[=+\-@]/.test(s)) s = "'" + s;
+    return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+  }
+  function downloadCsv() {
+    var R = compute();
+    var pr = state.product;
+    var round = function (v) { return Math.round(v * 100) / 100; };
+    var rows = [
+      ['Landed Cost Canada export'],
+      ['Product', pr.name], ['HS code', pr.hs], ['Order quantity', pr.qty], ['Weight per unit (kg)', pr.kg], ['Delivered to', pr.dest],
+      ['GST included in landed cost', state.includeGST ? 'Yes' : 'No'],
+      ['Exchange-rate scenario', scenarioText() || 'Rates as entered'],
+      ['Exchange rates (CA$ per unit)', currenciesInUse().map(function (c) { return c + ' ' + pos(state.rates[c]); }).join('; ')],
+      [],
+      ['Supplier', 'Country', 'Incoterm', 'Currency', 'Unit price', 'Supplier price CA$', 'Shipping and charges CA$', 'Value for duty CA$',
+        'Duty CA$', 'Surtax CA$', 'GST CA$', 'Landed total CA$', 'Per unit CA$', 'Lead time (days)', 'CO2 (kg)',
+        'Cost score', 'Quality', 'Reliability', 'Lead time score', 'Supply risk', 'CO2 score', 'Overall (out of 100)']
+    ];
+    R.all.forEach(function (x) {
+      var s = x.s;
+      if (!x.complete) { rows.push([displayName(s, x.i), s.country, s.incoterm, s.currency, s.price, 'Incomplete: add the ' + x.missing.join(' and ')]); return; }
+      var sc = x.scores;
+      rows.push([displayName(s, x.i), s.country, s.incoterm, s.currency, x.price, round(x.goods), round(x.logistics), round(x.vfd),
+        round(x.duty), round(x.surtax), round(x.gst), round(x.total), Math.round(x.perUnit * 10000) / 10000, x.lead || '', Math.round(x.co2),
+        sc.cost.toFixed(1), sc.quality, sc.reliability, sc.lead.toFixed(1), sc.risk, sc.co2.toFixed(1), Math.round(x.overall)]);
+    });
+    if (R.best && R.ok.length > 1) { rows.push([]); rows.push(['Best overall', displayName(R.best.s, R.best.i)]); }
+    var csv = '﻿' + rows.map(function (r) { return r.map(csvCell).join(','); }).join('\r\n');
+    var blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+    var a = document.createElement('a');
+    var slug = (pr.name || 'comparison').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 40) || 'comparison';
+    a.href = URL.createObjectURL(blob);
+    a.download = 'landed-cost-' + slug + '.csv';
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+  }
+
+  /* ---------- Events ---------- */
+  document.addEventListener('input', function (e) {
+    var t = e.target, d = t.dataset;
+    if (d.path) {
+      setPath(d.path, t.type === 'checkbox' ? t.checked : t.value);
+    } else if (d.s) {
+      var s = state.suppliers[state.active];
+      s[d.s] = t.value;
+      if (d.s === 'name' || d.s === 'country') renderTabs();
+      if (d.s === 'currency') renderRates();
+      if (d.s === 'incoterm') applyTermStatus();
+      if (t.type === 'range') { var o = document.getElementById(t.id + '-out'); if (o) o.textContent = t.value + ' / 10'; }
+    } else if (d.cost) {
+      state.suppliers[state.active].costs[d.cost] = t.value;
+    } else if (d.weight) {
+      state.weights[d.weight] = num(t.value);
+      updateWeightOutputs();
+    } else if (d.rate) {
+      state.rates[d.rate] = t.value;
+      state.ratesSource = { type: 'manual' };
+      renderRatesSource();
+    } else if (t.id === 'fx-shock') {
+      state.fxShock = num(t.value);
+      updateFxLabel();
+    } else {
+      return;
+    }
+    renderOutputs();
+    save();
+  });
+
+  document.addEventListener('click', function (e) {
+    var b = e.target.closest('[data-action]');
+    if (!b) return;
+    var a = b.dataset.action;
+    if (a === 'tab') {
+      state.active = +b.dataset.index; renderTabs(); renderEditor(); renderOutputs(); save();
+      var tb = document.getElementById('tab-' + state.active); if (tb) tb.focus();
+    } else if (a === 'add') {
+      if (state.suppliers.length >= MAX_SUPPLIERS) return;
+      var ns = blankSupplier('Supplier ' + String.fromCharCode(65 + state.suppliers.length));
+      ns.currency = state.suppliers[state.active] ? state.suppliers[state.active].currency : 'USD';
+      state.suppliers.push(ns);
+      state.active = state.suppliers.length - 1;
+      renderTabs(); renderEditor('s-name'); renderRates(); renderOutputs(); save();
+    } else if (a === 'remove') {
+      if (state.suppliers.length < 2) return;
+      var idx = state.active;
+      lastRemoved = { supplier: state.suppliers[idx], index: idx };
+      state.suppliers.splice(idx, 1);
+      if (state.routeFor === idx) state.routeFor = -1; else if (state.routeFor > idx) state.routeFor--;
+      state.active = Math.min(idx, state.suppliers.length - 1);
+      renderTabs(); renderEditor(); renderRates(); renderOutputs(); save();
+      toast('Removed ' + displayName(lastRemoved.supplier, idx) + '.', true);
+    } else if (a === 'undo') {
+      if (!lastRemoved || state.suppliers.length >= MAX_SUPPLIERS) return;
+      state.suppliers.splice(lastRemoved.index, 0, lastRemoved.supplier);
+      state.active = lastRemoved.index;
+      lastRemoved = null;
+      $('#toast').style.display = 'none';
+      renderTabs(); renderEditor(); renderRates(); renderOutputs(); save();
+    } else if (a === 'route') {
+      var ri = +b.dataset.index;
+      state.routeFor = (lastR && lastR.best && lastR.best.i === ri) ? -1 : ri;
+      renderOutputs(); save();
+      var chip = $('.chip[data-index="' + ri + '"]'); if (chip) chip.focus();
+    } else if (a === 'sample') {
+      state = sampleState(); renderAll(); save();
+      toast('Sample data loaded.', false);
+    } else if (a === 'new') {
+      var fresh = baseState();
+      fresh.rates = Object.assign({}, state.rates);
+      fresh.ratesSource = state.ratesSource;
+      fresh.weights = Object.assign({}, state.weights);
+      state = fresh; renderAll(); save();
+      var pn = $('#p-name'); if (pn) pn.focus();
+    } else if (a === 'hide-note') {
+      state.isSample = false; renderOutputs(); save();
+    } else if (a === 'fetch-rates') {
+      fetchRates();
+    } else if (a === 'csv') {
+      downloadCsv();
+    } else if (a === 'print') {
+      window.print();
+    }
+  });
+
+  $('#tabs').addEventListener('keydown', function (e) {
+    if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
+    var n = state.suppliers.length;
+    var next = (state.active + (e.key === 'ArrowRight' ? 1 : n - 1)) % n;
+    e.preventDefault();
+    state.active = next; renderTabs(); renderEditor(); renderOutputs(); save();
+    var tb = document.getElementById('tab-' + next); if (tb) tb.focus();
+  });
+
+  var openBeforePrint = false;
+  window.addEventListener('beforeprint', function () {
+    var m = $('#method-guide'); openBeforePrint = m.open; m.open = true; renderPrintSummary(compute());
+  });
+  window.addEventListener('afterprint', function () { $('#method-guide').open = openBeforePrint; });
+
+  /* ---------- Start ---------- */
+  renderMatrix();
+  renderAll();
+
+  // Exposed for testing in the browser console.
+  window.LandedCost = { compute: compute, getState: function () { return state; } };
+})();
+</script>
+</body>
+</html>
